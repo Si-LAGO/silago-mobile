@@ -8,17 +8,20 @@ class AppTheme {
   static const Color primaryGreen = Color(0xFF16A34A);
   static const Color primaryGreenDark = Color(0xFF15803D);
   static const Color greenTint = Color(0xFFDCFCE7);
+  static const Color greenPastelLight = Color(0xFFF0FDF4); // untuk banner
   
   // Background Colors
-  static const Color creamBackground = Color(0xFFFAF7F0);
+  static const Color creamBackground = Color(0xFFFFFFFF);  // Putih
   static const Color surface = Color(0xFFFFFFFF);
+  static const Color greyVeryLight = Color(0xFFF5F5F5); // untuk kotak kategori
   
   // Border & Divider
-  static const Color border = Color(0xFFEDE7DA);
+  static const Color border = Color(0xFFE5E7EB);
   
   // Text Colors
-  static const Color textPrimary = Color(0xFF1F2937);
-  static const Color textSecondary = Color(0xFF78716C);
+  static const Color textPrimary = Color(0xFF374151); // Abu-abu gelap (bukan hitam)
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color textMuted = Color(0xFF9CA3AF);
   
   // Status Colors
   static const Color error = Color(0xFFDC2626);
@@ -62,7 +65,7 @@ class AppTheme {
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // rounded rectangle
+            borderRadius: BorderRadius.circular(12), // rounded 12px
           ),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -78,7 +81,7 @@ class AppTheme {
           side: const BorderSide(color: primaryGreen, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // rounded rectangle
+            borderRadius: BorderRadius.circular(12), // rounded 12px
           ),
           textStyle: const TextStyle(
             fontSize: 16,
