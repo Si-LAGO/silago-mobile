@@ -25,10 +25,13 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Fungsi untuk handle login (dummy, nanti sambung ke API)
+  // Fungsi untuk handle login dengan validasi proper
   void _handleLogin() {
-    // Validasi sederhana
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    // Validasi: field tidak boleh kosong
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Email/NIM dan Password harus diisi'),
@@ -37,8 +40,50 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return;
     }
-    
-    // Untuk sekarang langsung pindah ke HomeScreen
+
+    // Validasi: Email format atau NIM (hanya angka, tanpa spasi)
+    final isEmail = email.contains('@');
+    final isNIM = RegExp(r'^\d+$').hasMatch(email); // NIM hanya angka
+
+    if (!isEmail && !isNIM) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email tidak valid atau NIM harus berupa angka saja'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
+
+    // Validasi: Password minimal 8 karakter
+    if (password.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password minimal 8 karakter'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
+
+    // Validasi: Password harus kombinasi huruf, angka, dan simbol
+    final hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    final hasLowercase = password.contains(RegExp(r'[a-z]'));
+    final hasDigit = password.contains(RegExp(r'[0-9]'));
+    final hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+
+    if (!hasUppercase || !hasLowercase || !hasDigit || !hasSpecialChar) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password harus mengandung huruf besar, huruf kecil, angka, dan simbol'),
+          backgroundColor: AppTheme.error,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Jika validasi lolos, lanjut login (nanti sambung ke API)
     Navigator.pushReplacementNamed(context, '/home');
   }
 

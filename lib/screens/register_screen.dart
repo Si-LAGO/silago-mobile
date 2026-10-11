@@ -40,40 +40,71 @@ class _RegisterScreenState extends State<RegisterScreen> {
            email.endsWith('@students.polines.ac.id');
   }
 
-  // Handle register
+  // Handle register dengan validasi lengkap
   void _handleRegister() {
-    // Validasi
-    if (_nameController.text.isEmpty) {
+    final name = _nameController.text.trim();
+    final nim = _nimController.text.trim().replaceAll(' ', ''); // Hapus spasi
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    // Validasi: Nama lengkap
+    if (name.isEmpty) {
       _showError('Nama lengkap harus diisi');
       return;
     }
 
-    if (_nimController.text.isEmpty) {
+    if (name.length < 3) {
+      _showError('Nama minimal 3 karakter');
+      return;
+    }
+
+    // Validasi: NIM (hanya angka dan titik, tanpa spasi)
+    if (nim.isEmpty) {
       _showError('NIM harus diisi');
       return;
     }
 
-    if (_emailController.text.isEmpty) {
+    if (!RegExp(r'^[\d.]+$').hasMatch(nim)) {
+      _showError('NIM hanya boleh berisi angka dan titik (tanpa spasi)');
+      return;
+    }
+
+    // Validasi: Email Polines
+    if (email.isEmpty) {
       _showError('Email harus diisi');
       return;
     }
 
-    if (!_isValidPolinesMail(_emailController.text)) {
-      _showError('Email harus menggunakan email Polines');
+    if (!_isValidPolinesMail(email)) {
+      _showError('Email harus menggunakan email Polines (@polines.ac.id)');
       return;
     }
 
-    if (_passwordController.text.isEmpty) {
+    // Validasi: Password minimal 8 karakter
+    if (password.isEmpty) {
       _showError('Password harus diisi');
       return;
     }
 
-    if (_passwordController.text.length < 8) {
+    if (password.length < 8) {
       _showError('Password minimal 8 karakter');
       return;
     }
 
-    if (_passwordController.text != _confirmPasswordController.text) {
+    // Validasi: Password harus kombinasi huruf, angka, dan simbol
+    final hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    final hasLowercase = password.contains(RegExp(r'[a-z]'));
+    final hasDigit = password.contains(RegExp(r'[0-9]'));
+    final hasSpecialChar = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+
+    if (!hasUppercase || !hasLowercase || !hasDigit || !hasSpecialChar) {
+      _showError('Password harus mengandung huruf besar, huruf kecil, angka, dan simbol');
+      return;
+    }
+
+    // Validasi: Confirm password
+    if (password != confirmPassword) {
       _showError('Password dan konfirmasi password tidak sama');
       return;
     }
