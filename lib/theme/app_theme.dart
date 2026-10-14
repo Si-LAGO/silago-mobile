@@ -3,44 +3,48 @@ import 'package:flutter/material.dart';
 /// Class yang berisi semua warna dan theme configuration untuk aplikasi SILAGO
 class AppTheme {
   // ===== COLORS =====
-  
+
   // Primary Colors
   static const Color primaryGreen = Color(0xFF16A34A);
   static const Color primaryGreenDark = Color(0xFF15803D);
   static const Color greenTint = Color(0xFFDCFCE7);
-  
+  static const Color greenPastelLight = Color(0xFFF0FDF4); // untuk banner
+
   // Background Colors
-  static const Color creamBackground = Color(0xFFFAF7F0);
+  static const Color creamBackground = Color(0xFFFFFFFF); // Putih
   static const Color surface = Color(0xFFFFFFFF);
-  
+  static const Color greyVeryLight = Color(0xFFF5F5F5); // untuk kotak kategori
+
   // Border & Divider
-  static const Color border = Color(0xFFEDE7DA);
-  
+  static const Color border = Color(0xFFE5E7EB);
+
   // Text Colors
-  static const Color textPrimary = Color(0xFF1F2937);
-  static const Color textSecondary = Color(0xFF78716C);
-  
+  static const Color textPrimary = Color(
+    0xFF374151,
+  ); // Abu-abu gelap (bukan hitam)
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color textMuted = Color(0xFF9CA3AF);
+
   // Status Colors
   static const Color error = Color(0xFFDC2626);
-  
+
   // ===== THEME DATA =====
-  
+
   static ThemeData get lightTheme {
     return ThemeData(
       // Font utama
       fontFamily: 'Inter',
-      
+
       // Color scheme
       colorScheme: ColorScheme.light(
         primary: primaryGreen,
         secondary: primaryGreen,
         error: error,
         surface: surface,
-        background: creamBackground,
       ),
-      
+
       scaffoldBackgroundColor: creamBackground,
-      
+
       // AppBar style
       appBarTheme: const AppBarTheme(
         backgroundColor: surface,
@@ -53,7 +57,7 @@ class AppTheme {
           fontFamily: 'Inter',
         ),
       ),
-      
+
       // Button style (pill-shaped)
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -62,7 +66,7 @@ class AppTheme {
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // rounded rectangle
+            borderRadius: BorderRadius.circular(12), // rounded 12px
           ),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -71,14 +75,14 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primaryGreen,
           side: const BorderSide(color: primaryGreen, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // rounded rectangle
+            borderRadius: BorderRadius.circular(12), // rounded 12px
           ),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -87,7 +91,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: primaryGreen,
@@ -99,12 +103,15 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // Input decoration (rounded 12px)
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: border, width: 1),
@@ -136,19 +143,19 @@ class AppTheme {
           fontFamily: 'Inter',
         ),
       ),
-      
+
       // Card style (rounded 16-20px dengan shadow lembut)
       cardTheme: CardThemeData(
         color: surface,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.08),
+        shadowColor: Colors.black.withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: border, width: 1),
         ),
         margin: EdgeInsets.zero,
       ),
-      
+
       // Text theme
       textTheme: const TextTheme(
         // Heading
@@ -170,7 +177,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           fontFamily: 'Inter',
         ),
-        
+
         // Title
         titleLarge: TextStyle(
           color: textPrimary,
@@ -190,7 +197,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           fontFamily: 'Inter',
         ),
-        
+
         // Body
         bodyLarge: TextStyle(
           color: textPrimary,
@@ -210,7 +217,7 @@ class AppTheme {
           fontWeight: FontWeight.w400,
           fontFamily: 'Inter',
         ),
-        
+
         // Label
         labelLarge: TextStyle(
           color: textSecondary,
@@ -231,7 +238,7 @@ class AppTheme {
           fontFamily: 'Inter',
         ),
       ),
-      
+
       // Divider
       dividerTheme: const DividerThemeData(
         color: border,
