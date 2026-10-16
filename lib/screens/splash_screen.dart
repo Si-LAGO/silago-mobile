@@ -43,6 +43,19 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Image.asset(
                     'assets/images/logo_silago.png',
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryGreen,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: const Icon(
+                          Icons.store,
+                          size: 60,
+                          color: Colors.white,
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -87,7 +100,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 CustomPaint(
                   size: Size(MediaQuery.of(context).size.width, 200),
                   painter: WavePainter(
-                    color: AppTheme.primaryGreenDark.withValues(alpha: 0.3),
+                    color: AppTheme.primaryGreenDark.withOpacity(0.3),
                     offset: 60,
                   ),
                 ),
@@ -95,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 CustomPaint(
                   size: Size(MediaQuery.of(context).size.width, 200),
                   painter: WavePainter(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.4),
+                    color: AppTheme.primaryGreen.withOpacity(0.4),
                     offset: 30,
                   ),
                 ),
@@ -103,7 +116,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 CustomPaint(
                   size: Size(MediaQuery.of(context).size.width, 200),
                   painter: WavePainter(
-                    color: AppTheme.greenTint.withValues(alpha: 0.5),
+                    color: AppTheme.greenTint.withOpacity(0.5),
                     offset: 0,
                   ),
                 ),

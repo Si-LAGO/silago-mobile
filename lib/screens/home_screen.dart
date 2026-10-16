@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../services/product_service.dart';
 import '../theme/app_theme.dart';
-import '../utils/formatters.dart';
-import '../widgets/product_card.dart';
 
 /// Home Screen / Beranda - Halaman utama marketplace
 /// Design sesuai PDF: 04 - Beranda Home SILAGO
@@ -18,87 +16,60 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final TextEditingController _searchController = TextEditingController();
-  final ProductService _productService = ProductService();
 
-  // Kategori dari API GET /categories
-  List<CategoryModel> _categories = [];
-  bool _isLoadingCategories = true;
+  // Dummy data kategori (nanti ganti dengan API GET /categories)
+  final List<Map<String, dynamic>> _categories = [
+    {'id': 1, 'name': 'Elektronik', 'icon': Icons.laptop},
+    {'id': 2, 'name': 'Fashion', 'icon': Icons.checkroom},
+    {'id': 3, 'name': 'Kendaraan', 'icon': Icons.directions_bike},
+    {'id': 4, 'name': 'Buku & Alat Tulis', 'icon': Icons.menu_book},
+    {'id': 5, 'name': 'Rumah Tangga', 'icon': Icons.home},
+    {'id': 6, 'name': 'Lainnya', 'icon': Icons.more_horiz},
+  ];
 
-  // Produk dari API GET /products
-  List<ProductModel> _products = [];
-  bool _isLoadingProducts = true;
-  String? _errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCategories();
-    _loadProducts();
-  }
-
-  Future<void> _loadCategories() async {
-    try {
-      setState(() => _isLoadingCategories = true);
-      final categories = await _productService.getCategories();
-      if (mounted) {
-        setState(() {
-          _categories = categories;
-          _isLoadingCategories = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _isLoadingCategories = false);
-      }
-    }
-  }
-
-  Future<void> _loadProducts() async {
-    try {
-      setState(() {
-        _isLoadingProducts = true;
-        _errorMessage = null;
-      });
-
-      final response = await _productService.getProducts(
-        page: 1,
-        perPage: 10,
-        sort: 'newest',
-      );
-
-      if (mounted) {
-        setState(() {
-          _products = response.products;
-          _isLoadingProducts = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = e.toString();
-          _isLoadingProducts = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _toggleFavorite(int productId, int index) async {
-    try {
-      final isFavorited = await _productService.toggleFavorite(productId);
-      if (mounted) {
-        setState(() {
-          _products[index] =
-              _products[index].copyWith(isFavorited: isFavorited);
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal toggle favorite: $e')),
-        );
-      }
-    }
-  }
+  // Dummy data produk (nanti ganti dengan API GET /products)
+  final List<Map<String, dynamic>> _products = [
+    {
+      'id': 1,
+      'name': 'Laptop Asus ROG',
+      'price': 8500000,
+      'condition': 'Bekas',
+      'location': 'Semarang',
+      'isNegotiable': true,
+      'isFavorite': false,
+      'image': null,
+    },
+    {
+      'id': 2,
+      'name': 'Mouse Logitech G502',
+      'price': 450000,
+      'condition': 'Baru (BNIB)',
+      'location': 'Semarang',
+      'isNegotiable': true,
+      'isFavorite': false,
+      'image': null,
+    },
+    {
+      'id': 3,
+      'name': 'Keyboard Mechanical',
+      'price': 750000,
+      'condition': 'Bekas',
+      'location': 'Semarang',
+      'isNegotiable': true,
+      'isFavorite': true,
+      'image': null,
+    },
+    {
+      'id': 4,
+      'name': 'Sepeda MTB Polygon',
+      'price': 2500000,
+      'condition': 'Bekas',
+      'location': 'Semarang',
+      'isNegotiable': false,
+      'isFavorite': false,
+      'image': null,
+    },
+  ];
 
   @override
   void dispose() {
@@ -138,8 +109,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     } else if (index == 4) {
-      // Profil - Navigate ke Settings
-      Navigator.pushNamed(context, '/settings');
+      // Profil (job Aidan - belum dibuat)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fitur Profil belum tersedia')),
+      );
     }
   }
 
@@ -153,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Row(
           children: [
             // Logo SILAGO (ikon tag hijau)
-            SizedBox(
+            Container(
               width: 32,
               height: 32,
               child: Image.asset(
@@ -314,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         height: 100,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: Colors.white.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Center(
@@ -352,84 +325,61 @@ class _HomeScreenState extends State<HomeScreen> {
             // Kategori Grid 3x2
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _isLoadingCategories
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(24.0),
-                        child: CircularProgressIndicator(
-                          color: AppTheme.primaryGreen,
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.1,
+                ),
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final category = _categories[index];
+                  return GestureDetector(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Kategori: ${category['name']}'),
                         ),
-                      ),
-                    )
-                  : _categories.isEmpty
-                      ? const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(24.0),
-                            child: Text(
-                              'Kategori tidak tersedia',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
+                      );
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Kotak kategori dengan background abu-abu sangat muda
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: AppTheme.greyVeryLight,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        )
-                      : GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 1.1,
+                          child: Icon(
+                            category['icon'],
+                            color: AppTheme.primaryGreenDark,
+                            size: 28,
                           ),
-                          itemCount: _categories.length,
-                          itemBuilder: (context, index) {
-                            final category = _categories[index];
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.pushNamed(
-                                  context,
-                                  '/search',
-                                  arguments: category,
-                                );
-                              },
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  // Kotak kategori dengan background abu-abu sangat muda
-                                  Container(
-                                    width: 56,
-                                    height: 56,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.greyVeryLight,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      categoryIcon(category.icon),
-                                      color: AppTheme.primaryGreenDark,
-                                      size: 28,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  // Label kategori
-                                  Text(
-                                    category.name,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      color: AppTheme.textPrimary,
-                                      fontFamily: 'Inter',
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
                         ),
+                        const SizedBox(height: 6),
+                        // Label kategori
+                        Text(
+                          category['name'],
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.textPrimary,
+                            fontFamily: 'Inter',
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
 
             const SizedBox(height: 24),
@@ -450,7 +400,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // TODO: Lihat semua
+                    },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(0, 0),
@@ -475,97 +427,21 @@ class _HomeScreenState extends State<HomeScreen> {
             // Grid Produk (2 kolom)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _isLoadingProducts
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: CircularProgressIndicator(
-                          color: AppTheme.primaryGreen,
-                        ),
-                      ),
-                    )
-                  : _errorMessage != null
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32.0),
-                            child: Column(
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  size: 48,
-                                  color: AppTheme.error,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Gagal memuat produk',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _errorMessage!,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: _loadProducts,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.primaryGreen,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  child: const Text('Coba Lagi'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : _products.isEmpty
-                          ? const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(32.0),
-                                child: Text(
-                                  'Belum ada produk',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 16,
-                                childAspectRatio: 0.7,
-                              ),
-                              itemCount: _products.length,
-                              itemBuilder: (context, index) {
-                                final product = _products[index];
-                                return ProductCard(
-                                  product: product,
-                                  onTap: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      '/product-detail',
-                                      arguments: product.id,
-                                    );
-                                  },
-                                  onToggleFavorite: () =>
-                                      _toggleFavorite(product.id, index),
-                                );
-                              },
-                            ),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.7,
+                ),
+                itemCount: _products.length,
+                itemBuilder: (context, index) {
+                  final product = _products[index];
+                  return _buildProductCard(product);
+                },
+              ),
             ),
 
             const SizedBox(height: 100), // Space untuk bottom nav
@@ -576,13 +452,177 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildProductCard(Map<String, dynamic> product) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate ke product detail screen
+        Navigator.pushNamed(context, '/product-detail');
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.border, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image dengan icon hati dan label nego
+            Stack(
+              children: [
+                // Image Placeholder
+                Container(
+                  height: 140,
+                  decoration: BoxDecoration(
+                    color: AppTheme.greyVeryLight,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.image_outlined,
+                      size: 48,
+                      color: AppTheme.textMuted,
+                    ),
+                  ),
+                ),
+                // Icon hati pojok kanan atas
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      product['isFavorite']
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: product['isFavorite']
+                          ? Colors.red
+                          : AppTheme.textMuted,
+                      size: 18,
+                    ),
+                  ),
+                ),
+                // Label "Bisa nego"
+                if (product['isNegotiable'])
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGreen,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Bisa nego',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            // Product Info
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nama Produk
+                  Text(
+                    product['name'],
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                      fontFamily: 'Inter',
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Harga
+                  Text(
+                    'Rp${product['price'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primaryGreenDark,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Lokasi
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 12,
+                        color: AppTheme.textMuted,
+                      ),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          product['location'],
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.textSecondary,
+                            fontFamily: 'Inter',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBottomNavBar() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -644,7 +684,7 @@ class _HomeScreenState extends State<HomeScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+              color: AppTheme.primaryGreen.withOpacity(0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

@@ -371,10 +371,7 @@ class _SearchScreenState extends State<SearchScreen> {
             _isLoading
                 ? 'Mencari produk...'
                 : '${_searchResults.length} produk ditemukan',
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppTheme.textSecondary,
-            ),
+            style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
           ),
         ),
 
@@ -398,11 +395,7 @@ class _SearchScreenState extends State<SearchScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 48,
-                color: AppTheme.error,
-              ),
+              const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
               const SizedBox(height: 16),
               const Text(
                 'Gagal memuat produk',

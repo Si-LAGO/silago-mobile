@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/product_model.dart';
-import '../services/product_service.dart';
 import '../theme/app_theme.dart';
-import '../utils/formatters.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key});
@@ -13,86 +10,7 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  final ProductService _productService = ProductService();
-
-  ProductModel? _product;
-  bool _isLoading = true;
-  String? _errorMessage;
-
-  int? _currentImageIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    // productId passed via Navigator arguments
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      if (args is int) {
-        _loadProduct(args);
-      } else {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'ID produk tidak ditemukan.';
-        });
-      }
-    });
-  }
-
-  Future<void> _loadProduct(int productId) async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      final product = await _productService.getProductById(productId);
-
-      if (mounted) {
-        setState(() {
-          _product = product;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = e.toString();
-        });
-      }
-    }
-  }
-
-  void _toggleFavorite() async {
-    if (_product == null) return;
-    try {
-      final isFavorited =
-          await _productService.toggleFavorite(_product!.id);
-      if (mounted) {
-        setState(() {
-          _product = _product!.copyWith(isFavorited: isFavorited);
-        });
-      }
-    } catch (_) {}
-  }
-
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inDays > 0) return '${diff.inDays} hari lalu';
-    if (diff.inHours > 0) return '${diff.inHours} jam lalu';
-    if (diff.inMinutes > 0) return '${diff.inMinutes} menit lalu';
-    return 'Baru saja';
-  }
-
-  List<String?> get _imageUrls {
-    if (_product?.images != null && _product!.images!.isNotEmpty) {
-      return _product!.images!.map((img) => img.url).toList();
-    }
-    if (_product?.coverImage != null) {
-      return [_product!.coverImage];
-    }
-    return [];
-  }
+  bool isFavorite = false;
 
   @override
   Widget build(BuildContext context) {
@@ -101,106 +19,62 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       body: Stack(
         children: [
           // Scrollable content
-          _isLoading || _errorMessage != null
-              ? _buildLoadingOrError()
-              : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildProductImage(),
-                      _buildProductInfo(),
-                      const SizedBox(height: 16),
-                      _buildDescription(),
-                      const SizedBox(height: 16),
-                      _buildSellerInfo(),
-                      // Padding bawah dinamis agar tidak mepet tombol CTA
-                      SizedBox(
-                        height: 110 + MediaQuery.of(context).padding.bottom,
-                      ),
-                    ],
-                  ),
-                ),
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product Image with back button and more options
+                _buildProductImage(),
+
+                // Product Info
+                _buildProductInfo(),
+
+                const SizedBox(height: 16),
+
+                // Description
+                _buildDescription(),
+
+                const SizedBox(height: 16),
+
+                // Seller Info
+                _buildSellerInfo(),
+
+                const SizedBox(height: 100), // Space for bottom buttons
+              ],
+            ),
+          ),
 
           // Bottom Action Buttons
-          if (!_isLoading && _errorMessage == null)
-            _buildBottomButtons(),
+          _buildBottomButtons(),
         ],
       ),
     );
   }
 
-  Widget _buildLoadingOrError() {
-    return Center(
-      child: _isLoading
-          ? const CircularProgressIndicator(color: AppTheme.primaryGreen)
-          : Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline,
-                      size: 48, color: AppTheme.error),
-                  const SizedBox(height: 16),
-                  Text(
-                    _errorMessage ?? 'Gagal memuat produk',
-                    style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      final args =
-                          ModalRoute.of(context)?.settings.arguments;
-                      if (args is int) _loadProduct(args);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGreen,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Coba Lagi'),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
   Widget _buildProductImage() {
-    final urls = _imageUrls;
     return Stack(
       children: [
+        // Product Image
         Container(
           height: 300,
           width: double.infinity,
-          color: AppTheme.greyVeryLight,
-          child: urls.isEmpty
-              ? const Center(
-                  child: Icon(Icons.image_outlined,
-                      size: 64, color: AppTheme.textMuted))
-              : PageView.builder(
-                  itemCount: urls.length,
-                  onPageChanged: (index) =>
-                      setState(() => _currentImageIndex = index),
-                  itemBuilder: (context, index) {
-                    return Image.network(
-                      urls[index]!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: AppTheme.greyVeryLight,
-                        child: const Center(
-                          child: Icon(Icons.image_outlined,
-                              size: 64, color: AppTheme.textMuted),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+          color: Colors.grey[200],
+          child: Image.asset(
+            'assets/images/placeholder.png',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[300],
+                child: const Icon(Icons.image, size: 100, color: Colors.grey),
+              );
+            },
+          ),
         ),
 
         // Status Bar Space
         Container(
           height: MediaQuery.of(context).padding.top,
-          color: Colors.black.withValues(alpha: 0.3),
+          color: Colors.black.withOpacity(0.3),
         ),
 
         // Back Button & More Options
@@ -211,63 +85,49 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Back Button
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: Colors.black.withOpacity(0.5),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.arrow_back,
-                      color: Colors.white, size: 24),
+                  child: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
               ),
+
+              // More Options Button
               GestureDetector(
-                onTap: () => _showMoreOptions(context),
+                onTap: () {
+                  _showMoreOptions(context);
+                },
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: Colors.black.withOpacity(0.5),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.more_vert,
-                      color: Colors.white, size: 24),
+                  child: const Icon(
+                    Icons.more_vert,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-
-        // Image indicator dots
-        if (urls.length > 1)
-          Positioned(
-            bottom: 12,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(urls.length, (i) {
-                return Container(
-                  width: 6,
-                  height: 6,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: i == _currentImageIndex
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.5),
-                  ),
-                );
-              }),
-            ),
-          ),
       ],
     );
   }
 
   Widget _buildProductInfo() {
-    final p = _product!;
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
@@ -275,53 +135,64 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Product Title
-          Text(
-            p.name,
-            style: const TextStyle(
-              fontSize: 22,
+          const Text(
+            'MacBook Air M1',
+            style: TextStyle(
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: AppTheme.textPrimary,
             ),
           ),
+
           const SizedBox(height: 8),
 
           // Price
-          Text(
-            formatRupiah(p.price),
-            style: const TextStyle(
-              fontSize: 26,
+          const Text(
+            'Rp7.500.000',
+            style: TextStyle(
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppTheme.primaryGreen,
             ),
           ),
+
           const SizedBox(height: 12),
 
-          // Meta Info: category • condition • time ago
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
+          // Meta Info
+          Row(
             children: [
-              if (p.category != null)
-                _metaChip(p.category!.name),
-              _metaChip(p.condition),
-              _metaChip(_timeAgo(p.createdAt)),
-              if (p.isNegotiable == true)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Bisa Nego',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.primaryGreen,
-                    ),
-                  ),
+              Text(
+                'Elektronik',
+                style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondary,
+                  shape: BoxShape.circle,
                 ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '2 hari lalu',
+                style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 4,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '128x dilihat',
+                style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+              ),
             ],
           ),
         ],
@@ -329,87 +200,63 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _metaChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppTheme.greyVeryLight,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppTheme.textSecondary,
-        ),
-      ),
-    );
-  }
-
   Widget _buildDescription() {
-    final p = _product!;
-
-    // Collect all non-empty description fields
-    final sections = <Map<String, String>>[];
-
-    if (p.description != null && p.description!.trim().isNotEmpty) {
-      sections.add({'title': 'Deskripsi', 'body': p.description!.trim()});
-    }
-    if (p.specification != null && p.specification!.trim().isNotEmpty) {
-      sections.add({'title': 'Spesifikasi', 'body': p.specification!.trim()});
-    }
-    if (p.completeness != null && p.completeness!.trim().isNotEmpty) {
-      sections.add({
-        'title': 'Kelengkapan',
-        'body': p.completeness!.trim()
-      });
-    }
-    if (p.sellReason != null && p.sellReason!.trim().isNotEmpty) {
-      sections.add({
-        'title': 'Alasan Jual',
-        'body': p.sellReason!.trim()
-      });
-    }
-
-    if (sections.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ...sections.expand((section) => [
-            Text(
-              section['title']!,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-              ),
+          const Text(
+            'MacBook Air M1 2020',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppTheme.textPrimary,
+              height: 1.5,
             ),
-            const SizedBox(height: 8),
-            Text(
-              section['body']!,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppTheme.textPrimary,
-                height: 1.5,
-              ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'RAM 8GB, SSD 256GB',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppTheme.textPrimary,
+              height: 1.5,
             ),
-            const SizedBox(height: 16),
-          ]),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Kondisi: Mulus, jarang dipakai',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppTheme.textPrimary,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Kelengkapan: Charger original, box',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppTheme.textPrimary,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Alasan jual: Sudah tidak terpakai',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppTheme.textPrimary,
+              height: 1.5,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildSellerInfo() {
-    final p = _product!;
-    final seller = p.seller;
-
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
@@ -418,14 +265,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           // Seller Avatar
           CircleAvatar(
             radius: 30,
-            backgroundColor: AppTheme.greyVeryLight,
-            backgroundImage: seller?.profilePhotoUrl != null
-                ? NetworkImage(seller!.profilePhotoUrl!)
-                : null,
-            child: seller?.profilePhotoUrl == null
-                ? const Icon(Icons.person, size: 30, color: AppTheme.textMuted)
-                : null,
+            backgroundColor: Colors.grey[300],
+            child: const Icon(Icons.person, size: 30, color: Colors.grey),
           ),
+
           const SizedBox(width: 12),
 
           // Seller Info
@@ -433,9 +276,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  seller?.name ?? '-',
-                  style: const TextStyle(
+                const Text(
+                  'Dimas Ardiansyah',
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.textPrimary,
@@ -443,11 +286,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  seller?.isVerified == true ? 'Terverifikasi' : 'Penjual SILAGO',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textSecondary,
-                  ),
+                  'Mahasiswa Polines',
+                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                 ),
               ],
             ),
@@ -455,14 +295,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
           // Lihat Profil Button
           OutlinedButton(
-            onPressed: () {},
+            onPressed: () {
+              // Navigate to seller profile
+            },
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppTheme.border),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
             child: const Text(
               'Lihat profil',
@@ -485,7 +326,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -502,33 +343,37 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: IconButton(
-                onPressed: _toggleFavorite,
+                onPressed: () {
+                  setState(() {
+                    isFavorite = !isFavorite;
+                  });
+                },
                 icon: Icon(
-                  _product?.isFavorited == true
-                      ? Icons.favorite
-                      : Icons.favorite_border,
-                  color: _product?.isFavorited == true
-                      ? Colors.red
-                      : AppTheme.textSecondary,
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.red : AppTheme.textSecondary,
                 ),
               ),
             ),
+
             const SizedBox(width: 12),
 
             // Buttons Column
             Expanded(
               child: Column(
                 children: [
+                  // Chat Penjual Button
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
                       onPressed: () {
+                        // Navigate to chat
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
                               'Fitur chat belum tersedia (job Rosa)',
                             ),
+                            duration: Duration(seconds: 2),
                           ),
                         );
                       },
@@ -549,17 +394,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 8),
+
+                  // Ajukan Penawaran Button
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: OutlinedButton(
                       onPressed: () {
+                        // Open negotiation panel
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
                               'Fitur tawar belum tersedia (job Denny)',
                             ),
+                            duration: Duration(seconds: 2),
                           ),
                         );
                       },
@@ -622,87 +472,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.flag, color: AppTheme.error),
-                title: const Text('Laporkan', style: TextStyle(color: AppTheme.error)),
+                title: const Text(
+                  'Laporkan',
+                  style: TextStyle(color: AppTheme.error),
+                ),
                 onTap: () {
                   Navigator.pop(context);
-                  _showReportDialog();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Fitur report belum tersedia (job Rosa)'),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: 16),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  void _showReportDialog() {
-    final reasonController = TextEditingController();
-    final descController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Laporkan Produk'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: reasonController,
-                decoration: const InputDecoration(
-                  labelText: 'Alasan',
-                  hintText: 'Contoh: Produk palsu',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: descController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Keterangan',
-                  hintText: 'Jelaskan detail laporan...',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_product == null) return;
-                final reason = reasonController.text.trim();
-                final desc = descController.text.trim();
-                if (reason.isEmpty) return;
-                Navigator.pop(context);
-                try {
-                  await _productService.reportProduct(
-                    _product!.id,
-                    reason: reason,
-                    description: desc,
-                  );
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Laporan berhasil dibuat')),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Gagal: $e')),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.error,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Kirim'),
-            ),
-          ],
         );
       },
     );
